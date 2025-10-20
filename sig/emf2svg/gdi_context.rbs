@@ -1,0 +1,53 @@
+# RBS type definitions for Emf2svg::GdiContext
+module Emf2svg
+  type gdi_pen_data = {
+    width: Integer,
+    color: Hash[Symbol, Integer],
+    style: Symbol
+  }
+
+  type gdi_brush_data = {
+    color: Hash[Symbol, Integer],
+    style: Symbol,
+    hatch: Symbol?
+  }
+
+  type gdi_font_data = {
+    name: String,
+    size: Integer,
+    weight: Integer,
+    italic: bool,
+    underline: bool
+  }
+
+  type gdi_state_data = {
+    pen: gdi_pen_data?,
+    brush: gdi_brush_data?,
+    font: gdi_font_data?,
+    transform: Transform
+  }
+
+  class GdiContext
+    attr_reader current_pen: gdi_pen_data?
+    attr_reader current_brush: gdi_brush_data?
+    attr_reader current_font: gdi_font_data?
+    attr_reader transform: Transform
+    attr_reader saved_states: Array[gdi_state_data]
+
+    def initialize: () -> void
+    def save_state: () -> void
+    def restore_state: () -> void
+    def set_pen: (gdi_pen_data pen) -> void
+    def set_brush: (gdi_brush_data brush) -> void
+    def set_font: (gdi_font_data font) -> void
+    def set_transform: (Transform transform) -> void
+    def get_stroke_attrs: () -> Hash[Symbol, untyped]
+    def get_fill_attrs: () -> Hash[Symbol, untyped]
+    def get_text_attrs: () -> Hash[Symbol, untyped]
+
+    private
+
+    def current_state: () -> gdi_state_data
+    def clone_state: (gdi_state_data state) -> gdi_state_data
+  end
+end

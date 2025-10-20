@@ -1,0 +1,15 @@
+# RBS type definitions for Emf2svg::Records::Text
+module Emf2svg
+  module Records
+    class Text < Base
+      def process: (Hash[Symbol, untyped] record) -> void
+
+      private
+
+      def process_exttextoutw: (Hash[Symbol, untyped] record) -> void
+      def process_exttextouta: (Hash[Symbol, untyped] record) -> void
+      def process_settextalign: (Hash[Symbol, untyped] record) -> void
+      def process_settextjustification: (Hash[Symbol, untyped] record) -> void
+    end
+  end
+end

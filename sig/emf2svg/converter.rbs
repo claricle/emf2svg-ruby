@@ -1,0 +1,19 @@
+# RBS type definitions for Emf2svg::Converter
+module Emf2svg
+  class Converter
+    attr_reader parser: Parser
+    attr_reader context: GdiContext?
+    attr_reader svg_builder: SvgBuilder?
+    attr_reader handlers: Hash[Symbol, Records::Base]
+
+    def initialize: (String binary_data) -> void
+
+    def convert: (?Hash[Symbol, untyped] options) -> String
+
+    private
+
+    def initialize_handlers: () -> void
+    def initialize_viewport: (Hash[Symbol, untyped] header_info) -> void
+    def process_record: (Hash[Symbol, untyped] record) -> void
+  end
+end

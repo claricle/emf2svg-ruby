@@ -121,7 +121,7 @@ module Emf2svg
                Dir.glob(File.join(work_path, "Release", "*.dll"))
              else
                Dir.glob(File.join(work_path, "libemf2svg.{so,dylib}"))
-                 .grep(/\/(?:lib)?[a-zA-Z0-9\-]+\.(?:so|dylib)$/)
+                 .grep(/\/(?:lib)?[a-zA-Z0-9-]+\.(?:so|dylib)$/)
              end
 
       FileUtils.cp_r(libs, ROOT.join("lib", "emf2svg"), verbose: true)

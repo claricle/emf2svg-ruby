@@ -1,0 +1,26 @@
+# RBS type definitions for Emf2svg::Transform
+module Emf2svg
+  class Transform
+    attr_reader m11: Float
+    attr_reader m12: Float
+    attr_reader m21: Float
+    attr_reader m22: Float
+    attr_reader dx: Float
+    attr_reader dy: Float
+
+    def initialize: (Float m11, Float m12, Float m21, Float m22, Float dx, Float dy) -> void
+    def self.identity: () -> Transform
+    def multiply: (Transform other) -> Transform
+    def invert: () -> Transform
+    def translate: (Float dx, Float dy) -> Transform
+    def scale: (Float sx, Float sy) -> Transform
+    def rotate: (Float angle) -> Transform
+    def transform_point: (Integer x, Integer y) -> Hash[Symbol, Integer]
+    def transform_points: (Array[Hash[Symbol, Integer]] points) -> Array[Hash[Symbol, Integer]]
+    def to_svg_matrix: () -> String
+
+    private
+
+    def determinant: () -> Float
+  end
+end

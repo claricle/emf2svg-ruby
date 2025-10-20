@@ -1,0 +1,37 @@
+# RBS type definitions for Emf2svg::Parser
+module Emf2svg
+  type parser_header_info = {
+    width: Integer,
+    height: Integer,
+    dpi_x: Float,
+    dpi_y: Float,
+    bounds: Hash[Symbol, Integer],
+    frame: Hash[Symbol, Integer]
+  }
+
+  type parser_record_data = {
+    type: Symbol,
+    bounds: Hash[Symbol, Integer]?,
+    points: Array[Hash[Symbol, Integer]]?,
+    data: untyped
+  }
+
+  class Parser
+    attr_reader header: parser_header_info
+    attr_reader records: Array[parser_record_data]
+
+    def initialize: (String binary_data) -> void
+    def parse: () -> Array[parser_record_data]
+    def to_svg: (?Hash[Symbol, untyped] options) -> String
+    def header_info: () -> parser_header_info
+
+    private
+
+    def validate_header!: () -> void
+    def parse_next_record: () -> parser_record_data?
+    def parse_polygon: () -> parser_record_data
+    def parse_polyline: () -> parser_record_data
+    def parse_rectangle: () -> parser_record_data
+    def parse_generic_record: (Integer type_num, Integer size) -> parser_record_data
+  end
+end

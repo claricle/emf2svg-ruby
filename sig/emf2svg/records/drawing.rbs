@@ -1,0 +1,27 @@
+# RBS type definitions for Emf2svg::Records::Drawing
+module Emf2svg
+  module Records
+    class Drawing < Base
+      def process: (Hash[Symbol, untyped] record) -> void
+
+      private
+
+      def process_polygon: (Hash[Symbol, untyped] record) -> void
+      def process_polyline: (Hash[Symbol, untyped] record) -> void
+      def process_polybezier: (Hash[Symbol, untyped] record) -> void
+      def process_rectangle: (Hash[Symbol, untyped] record) -> void
+      def process_ellipse: (Hash[Symbol, untyped] record) -> void
+      def process_roundrect: (Hash[Symbol, untyped] record) -> void
+      def process_movetoex: (Hash[Symbol, untyped] record) -> void
+      def process_lineto: (Hash[Symbol, untyped] record) -> void
+      def process_arc: (Hash[Symbol, untyped] record) -> void
+      def process_chord: (Hash[Symbol, untyped] record) -> void
+      def process_pie: (Hash[Symbol, untyped] record) -> void
+      def process_arcto: (Hash[Symbol, untyped] record) -> void
+      def process_anglearc: (Hash[Symbol, untyped] record) -> void
+      def process_polypolyline: (Hash[Symbol, untyped] record) -> void
+      def process_polypolygon: (Hash[Symbol, untyped] record) -> void
+      def create_arc_path: (Hash[Symbol, Numeric] rect, Float start_angle, Float sweep_angle) -> String
+    end
+  end
+end

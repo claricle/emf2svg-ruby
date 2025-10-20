@@ -1,0 +1,16 @@
+# RBS type definitions for Emf2svg::Records::Clipping
+module Emf2svg
+  module Records
+    class Clipping < Base
+      def process: (Hash[Symbol, untyped] record) -> void
+
+      private
+
+      def process_selectclippath: (Hash[Symbol, untyped] record) -> void
+      def process_intersectcliprect: (Hash[Symbol, untyped] record) -> void
+      def process_excludecliprect: (Hash[Symbol, untyped] record) -> void
+      def process_offsetcliprgn: (Hash[Symbol, untyped] record) -> void
+      def process_setmetargn: (Hash[Symbol, untyped] record) -> void
+    end
+  end
+end

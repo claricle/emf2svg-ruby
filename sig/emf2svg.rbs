@@ -1,0 +1,22 @@
+# RBS type definitions for Emf2svg
+module Emf2svg
+  VERSION: String
+
+  # Main API methods
+  def self.from_file: (String path, ?options: Hash[Symbol, untyped]) -> String
+  def self.from_binary_string: (String content, ?options: Hash[Symbol, untyped]) -> String
+  def self.emfplus?: (String content) -> bool
+
+  # Internal helper for implementation selection
+  def self.use_pure_ruby?: () -> bool
+  def self.c_extension_available?: () -> bool
+
+  class Error < StandardError
+  end
+
+  class ParseError < Error
+  end
+
+  class ValidationError < Error
+  end
+end

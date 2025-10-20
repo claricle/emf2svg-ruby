@@ -1,0 +1,29 @@
+# RBS type definitions for Emf2svg::Records::Base
+module Emf2svg
+  module Records
+    class Base
+      attr_reader context: GdiContext
+      attr_reader svg_builder: SvgBuilder
+
+      def initialize: (GdiContext context, SvgBuilder svg_builder) -> void
+
+      def process: (Hash[Symbol, untyped] record) -> void
+
+      private
+
+      def transform_points: (Array[Hash[Symbol, untyped]] points) -> Array[Hash[Symbol, untyped]]
+      def transform_point: (Numeric x, Numeric y) -> Hash[Symbol, Numeric]
+      def current_transform: () -> String
+      def color_to_hex: (Hash[Symbol, Integer] color) -> String
+      def current_pen: () -> Hash[Symbol, untyped]?
+      def current_brush: () -> Hash[Symbol, untyped]?
+      def current_font: () -> Hash[Symbol, untyped]?
+      def use_stroke?: () -> bool
+      def use_fill?: () -> bool
+      def calculate_bounds: (Array[Hash[Symbol, untyped]] points) -> Hash[Symbol, Numeric]
+      def points_to_path_data: (Array[Hash[Symbol, untyped]] points, ?close: bool) -> String
+      def map_coordinates: (Numeric x, Numeric y) -> Hash[Symbol, Numeric]
+      def map_rect: (Hash[Symbol, Numeric] rect) -> Hash[Symbol, Numeric]
+    end
+  end
+end

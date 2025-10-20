@@ -1,0 +1,23 @@
+# RBS type definitions for Emf2svg::Records::Bitmap
+module Emf2svg
+  module Records
+    class Bitmap < Base
+      def process: (Hash[Symbol, untyped] record) -> void
+
+      private
+
+      def process_bitblt: (Hash[Symbol, untyped] record) -> void
+      def process_stretchblt: (Hash[Symbol, untyped] record) -> void
+      def process_stretchdibits: (Hash[Symbol, untyped] record) -> void
+      def parse_dib_header: (String data, Integer offset) -> Hash[Symbol, untyped]
+      def parse_color_table: (String data, Integer offset, Integer num_colors, Integer bit_count) -> Array[Hash[Symbol, Integer]]
+      def decode_dib_pixels: (String data, Integer width, Integer height, Integer bit_count, Array[Hash[Symbol, Integer]] color_table, Integer row_size, bool bottom_up) -> Array[Array[Hash[Symbol, Integer]]]
+      def decode_1bit_pixels: (String data, Integer width, Integer height, Array[Hash[Symbol, Integer]] color_table, Integer row_size, bool bottom_up) -> Array[Array[Hash[Symbol, Integer]]]
+      def decode_4bit_pixels: (String data, Integer width, Integer height, Array[Hash[Symbol, Integer]] color_table, Integer row_size, bool bottom_up) -> Array[Array[Hash[Symbol, Integer]]]
+      def decode_8bit_pixels: (String data, Integer width, Integer height, Array[Hash[Symbol, Integer]] color_table, Integer row_size, bool bottom_up) -> Array[Array[Hash[Symbol, Integer]]]
+      def decode_24bit_pixels: (String data, Integer width, Integer height, Integer row_size, bool bottom_up) -> Array[Array[Hash[Symbol, Integer]]]
+      def decode_32bit_pixels: (String data, Integer width, Integer height, Integer row_size, bool bottom_up) -> Array[Array[Hash[Symbol, Integer]]]
+      def create_png_from_pixels: (Array[Array[Hash[Symbol, Integer]]] pixels, Integer width, Integer height) -> String
+    end
+  end
+end

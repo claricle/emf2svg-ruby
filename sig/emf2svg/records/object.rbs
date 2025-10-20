@@ -1,0 +1,16 @@
+# RBS type definitions for Emf2svg::Records::Object
+module Emf2svg
+  module Records
+    class Object < Base
+      def process: (Hash[Symbol, untyped] record) -> void
+
+      private
+
+      def process_selectobject: (Hash[Symbol, untyped] record) -> void
+      def process_deleteobject: (Hash[Symbol, untyped] record) -> void
+      def process_createpen: (Hash[Symbol, untyped] record) -> void
+      def process_createbrushindirect: (Hash[Symbol, untyped] record) -> void
+      def process_extcreatefontindirectw: (Hash[Symbol, untyped] record) -> void
+    end
+  end
+end

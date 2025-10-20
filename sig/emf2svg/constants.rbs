@@ -1,0 +1,58 @@
+# RBS type definitions for Emf2svg constants
+module Emf2svg
+  # EMF record type mapping (Integer to Symbol)
+  EMF_RECORD_TYPES: Hash[Integer, Symbol]
+
+  # Reverse mapping (Symbol to Integer)
+  EMF_RECORD_NAMES: Hash[Symbol, Integer]
+
+  # EMF file signature
+  EMF_SIGNATURE: Integer
+
+  # Map mode constants
+  MAP_MODES: Hash[Integer, Symbol]
+
+  # Background mode constants
+  BK_MODES: Hash[Integer, Symbol]
+
+  # Polygon fill mode constants
+  POLY_FILL_MODES: Hash[Integer, Symbol]
+
+  # Pen style constants
+  PEN_STYLES: Hash[Integer, Symbol]
+
+  # Brush style constants
+  BRUSH_STYLES: Hash[Integer, Symbol]
+
+  # Hatch style constants
+  HATCH_STYLES: Hash[Integer, Symbol]
+
+  # Text alignment flag constants
+  TEXT_ALIGN_NOUPDATECP: Integer
+  TEXT_ALIGN_UPDATECP: Integer
+  TEXT_ALIGN_LEFT: Integer
+  TEXT_ALIGN_RIGHT: Integer
+  TEXT_ALIGN_CENTER: Integer
+  TEXT_ALIGN_TOP: Integer
+  TEXT_ALIGN_BOTTOM: Integer
+  TEXT_ALIGN_BASELINE: Integer
+  TEXT_ALIGN_RTLREADING: Integer
+
+  # ROP2 mode constants
+  ROP2_MODES: Hash[Integer, Symbol]
+
+  # Stretch mode constants
+  STRETCH_MODES: Hash[Integer, Symbol]
+
+  # Stock object constants
+  STOCK_OBJECTS: Hash[Integer, Symbol]
+
+  # Font weight constants
+  FONT_WEIGHTS: Hash[Integer, Symbol]
+
+  # Arc direction constants
+  ARC_DIRECTIONS: Hash[Integer, Symbol]
+
+  # Modify world transform mode constants
+  MODIFY_WORLD_TRANSFORM_MODES: Hash[Integer, Symbol]
+end

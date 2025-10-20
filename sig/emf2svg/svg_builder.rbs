@@ -1,0 +1,25 @@
+# RBS type definitions for Emf2svg::SvgBuilder
+module Emf2svg
+  class SvgBuilder
+    attr_reader width: Integer
+    attr_reader height: Integer
+    attr_reader viewbox: String
+
+    def initialize: (Integer width, Integer height, ?viewbox: String?) -> void
+    def start_document: () -> void
+    def end_document: () -> String
+    def add_element: (String tag, Hash[String | Symbol, untyped] attrs, ?String? content) -> void
+    def add_path: (String path_data, Hash[String | Symbol, untyped] attrs) -> void
+    def add_polygon: (Array[Hash[Symbol, Integer]] points, Hash[String | Symbol, untyped] attrs) -> void
+    def add_polyline: (Array[Hash[Symbol, Integer]] points, Hash[String | Symbol, untyped] attrs) -> void
+    def add_rectangle: (Hash[Symbol, Integer] rect, Hash[String | Symbol, untyped] attrs) -> void
+    def add_text: (String text, Integer x, Integer y, Hash[String | Symbol, untyped] attrs) -> void
+    def to_svg: () -> String
+
+    private
+
+    def format_points: (Array[Hash[Symbol, Integer]] points) -> String
+    def format_color: (Hash[Symbol, Integer] color) -> String
+    def escape_xml: (String text) -> String
+  end
+end

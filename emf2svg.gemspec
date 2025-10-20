@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Ribose"]
   spec.email         = ["open.source@ribose.com"]
 
-  spec.summary       = "Ruby interface to libemf2svg."
+  spec.summary       = "Pure Ruby EMF to SVG converter with optional C extension fallback."
   spec.homepage      = "https://github.com/metanorma/emf2svg-ruby"
   spec.license       = "BSD-2-Clause"
   spec.required_ruby_version = ">= 2.6.0"
@@ -26,12 +26,15 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_runtime_dependency "ffi", "~> 1.0"
-  spec.add_runtime_dependency "mini_portile2", "~> 2.6"
+  # Pure Ruby implementation dependencies
+  spec.add_dependency "bindata"
+  spec.add_dependency "chunky_png"
+  spec.add_dependency "moxml"
+  spec.add_dependency "nokogiri"
 
-  spec.add_development_dependency "rubocop", "1.5.2"
-  spec.add_development_dependency "rubocop-performance", "~> 1.0"
-  spec.add_development_dependency "rubocop-rails", "~> 2.0"
+  # Optional C extension fallback (will be removed in future version)
+  spec.add_dependency "ffi"
+  spec.add_dependency "mini_portile2"
 
   spec.extensions = ["ext/extconf.rb"]
 end

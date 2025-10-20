@@ -1,0 +1,24 @@
+# RBS type definitions for Emf2svg::Records::State
+module Emf2svg
+  module Records
+    class State < Base
+      def process: (Hash[Symbol, untyped] record) -> void
+
+      private
+
+      def process_savedc: (Hash[Symbol, untyped] record) -> void
+      def process_restoredc: (Hash[Symbol, untyped] record) -> void
+      def process_setmapmode: (Hash[Symbol, untyped] record) -> void
+      def process_setbkmode: (Hash[Symbol, untyped] record) -> void
+      def process_setpolyfillmode: (Hash[Symbol, untyped] record) -> void
+      def process_settextcolor: (Hash[Symbol, untyped] record) -> void
+      def process_setbkcolor: (Hash[Symbol, untyped] record) -> void
+      def process_setwindoworgex: (Hash[Symbol, untyped] record) -> void
+      def process_setwindowextex: (Hash[Symbol, untyped] record) -> void
+      def process_setviewportorgex: (Hash[Symbol, untyped] record) -> void
+      def process_setviewportextex: (Hash[Symbol, untyped] record) -> void
+      def process_setworldtransform: (Hash[Symbol, untyped] record) -> void
+      def process_modifyworldtransform: (Hash[Symbol, untyped] record) -> void
+    end
+  end
+end
