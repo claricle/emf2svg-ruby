@@ -28,7 +28,7 @@ jobs:
             platform: x86_64-darwin
             ruby-version: '2.7'
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - uses: ruby/setup-ruby@master
       with:
@@ -45,7 +45,7 @@ jobs:
 
     - run: bundle exec rake gem:native:${{ matrix.platform }}
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: pkg
         path: pkg/*.gem
@@ -70,7 +70,7 @@ jobs:
             platform: arm64-darwin
             ruby-version: '2.7'
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install packages
       if: matrix.os == 'ubuntu-latest'
@@ -85,7 +85,7 @@ jobs:
 
     - run: bundle exec rake gem:native:${{ matrix.platform }}
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: pkg
         path: pkg/*.gem
@@ -97,14 +97,14 @@ jobs:
     needs: [ build, cross ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - uses: ruby/setup-ruby@master
       with:
         ruby-version: '2.7'
         bundler-cache: true
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: pkg
         path: pkg

@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "ffi", "~> 1.0"
   spec.add_runtime_dependency "mini_portile2", "~> 2.6"
 
-  spec.add_development_dependency "rubocop", "1.5.2"
+  spec.add_development_dependency "rubocop", "~> 1.7"
   spec.add_development_dependency "rubocop-performance", "~> 1.0"
   spec.add_development_dependency "rubocop-rails", "~> 2.0"
 
