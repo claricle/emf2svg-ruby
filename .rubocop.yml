@@ -12,3 +12,11 @@ AllCops:
 
 Gemspec/RequireMFA:
   Enabled: false
+
+# Opinionated modern rubocop cops added since 1.5.2. The gemspec's
+# existing structure (add_runtime_dependency for runtime, dev deps in
+# gemspec so `gem install` works without bundler) is intentional.
+Gemspec/AddDependency:
+  Enabled: false
+Gemspec/DevelopmentDependencies:
+  Enabled: false

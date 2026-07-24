@@ -9,15 +9,18 @@ module Emf2svg
   class Recipe < MiniPortileCMake
     # Pinned vcpkg commit. Matches the SHA claricle/libemf2svg CI uses;
     # bump deliberately to refresh the ports tree.
-    VCPKG_REF = "4f95fba7a7d1101bb8acdeb51e4609686449701e"
+    VCPKG_REF = "4f95fba7a7d1101bb8acdeb51e4609686449701e".freeze
+    VCPKG_URL = "https://github.com/microsoft/vcpkg.git".freeze
     ROOT = Pathname.new(File.expand_path("../..", __dir__))
 
     def initialize
       super("libemf2svg", LIBEMF2SVG_VERSION)
 
       @files << {
+        # rubocop:disable Layout/LineLength
         url: "https://github.com/claricle/libemf2svg/releases/download/v#{LIBEMF2SVG_VERSION}/libemf2svg.tar.gz",
-        sha256: "3782453987b477f2d8657c727e30f1e7a509188edfe6de2f7423443635aefd6d", # rubocop:disable Layout/LineLength
+        sha256: "3782453987b477f2d8657c727e30f1e7a509188edfe6de2f7423443635aefd6d",
+        # rubocop:enable Layout/LineLength
       }
 
       @target = ROOT.join(@target).to_s
@@ -43,17 +46,26 @@ module Emf2svg
 
     def bootstrap_vcpkg
       vcpkg_root = File.join(work_path, "vcpkg")
-      vcpkg_exe = MiniPortile.windows? ? "vcpkg.exe" : "vcpkg"
-      return if File.executable?(File.join(vcpkg_root, vcpkg_exe))
+      return if vcpkg_bootstrapped?(vcpkg_root)
 
       message("Bootstrapping vcpkg@#{VCPKG_REF} into #{vcpkg_root}\n")
       FileUtils.rm_rf(vcpkg_root)
-      execute("clone-vcpkg", "git clone --quiet https://github.com/microsoft/vcpkg.git #{vcpkg_root}")
-      execute("checkout-vcpkg", "git checkout --quiet #{VCPKG_REF}", cd: vcpkg_root)
+      execute("clone-vcpkg", "git clone --quiet #{VCPKG_URL} #{vcpkg_root}")
+      execute("checkout-vcpkg",
+              "git checkout --quiet #{VCPKG_REF}", cd: vcpkg_root)
+      execute("bootstrap-vcpkg", bootstrap_cmd, cd: vcpkg_root)
+    end
+
+    def vcpkg_bootstrapped?(vcpkg_root)
+      exe = MiniPortile.windows? ? "vcpkg.exe" : "vcpkg"
+      File.executable?(File.join(vcpkg_root, exe))
+    end
+
+    def bootstrap_cmd
       if MiniPortile.windows?
-        execute("bootstrap-vcpkg", "bootstrap-vcpkg.bat -disableMetrics", cd: vcpkg_root)
+        "bootstrap-vcpkg.bat -disableMetrics"
       else
-        execute("bootstrap-vcpkg", "./bootstrap-vcpkg.sh -disableMetrics", cd: vcpkg_root)
+        "./bootstrap-vcpkg.sh -disableMetrics"
       end
     end
 
@@ -109,7 +121,8 @@ module Emf2svg
         if target_format.match?(out)
           message("Verifying #{l} ... OK\n")
         else
-          raise "Invalid file format '#{out}', /#{target_format.source}/ expected"
+          fmt = target_format.source
+          raise "Invalid file format '#{out}', /#{fmt}/ expected"
         end
       end
     end
