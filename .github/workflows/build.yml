@@ -137,6 +137,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu gperf autoconf autoconf-archive automake libtool
 
+    - name: Install macOS packages
+      if: startsWith(matrix.os, 'macos')
+      run: brew install gperf autoconf autoconf-archive automake libtool
+
     - name: Install Ruby
       uses: ruby/setup-ruby@master
       with:
