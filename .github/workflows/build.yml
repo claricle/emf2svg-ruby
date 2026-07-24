@@ -41,10 +41,15 @@ jobs:
     # https://github.com/microsoft/vcpkg/issues/15931
     # no good solution :(
     - name: Workaround for vcpkg
-      if: startsWith(matrix.os, 'ubuntu')
+      if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
+      shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get install gperf
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          sudo apt-get update
+          sudo apt-get install -y gperf autoconf autoconf-archive automake libtool
+        elif [[ "$RUNNER_OS" == "macOS" ]]; then
+          brew install gperf autoconf automake libtool
+        fi
 
     - run: |
         which make || true
@@ -86,10 +91,15 @@ jobs:
         bundler-cache: true
 
     - name: Workaround for vcpkg
-      if: startsWith(matrix.os, 'ubuntu')
+      if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
+      shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get install gperf
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          sudo apt-get update
+          sudo apt-get install -y gperf autoconf autoconf-archive automake libtool
+        elif [[ "$RUNNER_OS" == "macOS" ]]; then
+          brew install gperf autoconf automake libtool
+        fi
 
     - run: bundle exec rake gem:native:${{ matrix.platform }}
 
@@ -125,7 +135,7 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update
-        sudo apt-get install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu gperf
+        sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu gperf autoconf autoconf-archive automake libtool
 
     - name: Install Ruby
       uses: ruby/setup-ruby@master
@@ -203,10 +213,15 @@ jobs:
         path: pkg
 
     - name: Workaround for vcpkg
-      if: startsWith(matrix.os, 'ubuntu')
+      if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
+      shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get install gperf
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          sudo apt-get update
+          sudo apt-get install -y gperf autoconf autoconf-archive automake libtool
+        elif [[ "$RUNNER_OS" == "macOS" ]]; then
+          brew install gperf autoconf automake libtool
+        fi
 
     - name: Install native gem
       run: gem install -b pkg/emf2svg-$(ruby -I lib -r emf2svg/version -e "puts Emf2svg::VERSION").gem
