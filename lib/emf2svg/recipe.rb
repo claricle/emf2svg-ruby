@@ -49,11 +49,11 @@ module Emf2svg
       message("Bootstrapping vcpkg@#{VCPKG_REF} into #{vcpkg_root}\n")
       FileUtils.rm_rf(vcpkg_root)
       execute("clone-vcpkg", "git clone --quiet https://github.com/microsoft/vcpkg.git #{vcpkg_root}")
-      execute("checkout-vcpkg", "git checkout --quiet #{VCPKG_REF}", chdir: vcpkg_root)
+      execute("checkout-vcpkg", "git checkout --quiet #{VCPKG_REF}", cd: vcpkg_root)
       if MiniPortile.windows?
-        execute("bootstrap-vcpkg", "bootstrap-vcpkg.bat -disableMetrics", chdir: vcpkg_root)
+        execute("bootstrap-vcpkg", "bootstrap-vcpkg.bat -disableMetrics", cd: vcpkg_root)
       else
-        execute("bootstrap-vcpkg", "./bootstrap-vcpkg.sh -disableMetrics", chdir: vcpkg_root)
+        execute("bootstrap-vcpkg", "./bootstrap-vcpkg.sh -disableMetrics", cd: vcpkg_root)
       end
     end
 
