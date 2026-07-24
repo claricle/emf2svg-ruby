@@ -48,7 +48,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gperf autoconf autoconf-archive automake libtool
         elif [[ "$RUNNER_OS" == "macOS" ]]; then
-          brew install gperf autoconf automake libtool
+          brew install gperf autoconf autoconf-archive automake libtool
         fi
 
     - run: |
@@ -98,7 +98,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gperf autoconf autoconf-archive automake libtool
         elif [[ "$RUNNER_OS" == "macOS" ]]; then
-          brew install gperf autoconf automake libtool
+          brew install gperf autoconf autoconf-archive automake libtool
         fi
 
     - run: bundle exec rake gem:native:${{ matrix.platform }}
@@ -220,7 +220,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gperf autoconf autoconf-archive automake libtool
         elif [[ "$RUNNER_OS" == "macOS" ]]; then
-          brew install gperf autoconf automake libtool
+          brew install gperf autoconf autoconf-archive automake libtool
         fi
 
     - name: Install native gem

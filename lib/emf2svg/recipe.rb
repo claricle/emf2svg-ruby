@@ -106,10 +106,10 @@ module Emf2svg
         out, st = Open3.capture2("file #{l}")
         raise "Failed to query file #{l}: #{out}" unless st.exitstatus.zero?
 
-        if out.include?(target_format)
+        if target_format.match?(out)
           message("Verifying #{l} ... OK\n")
         else
-          raise "Invalid file format '#{out}', '#{@target_format}' expected"
+          raise "Invalid file format '#{out}', /#{target_format.source}/ expected"
         end
       end
     end
@@ -205,15 +205,18 @@ module Emf2svg
       @target_format ||=
         case target_platform
         when "arm64-darwin"
-          "Mach-O 64-bit dynamically linked shared library arm64"
+          /Mach-O 64-bit dynamically linked shared library arm64/
         when "x86_64-darwin"
-          "Mach-O 64-bit dynamically linked shared library x86_64"
+          /Mach-O 64-bit dynamically linked shared library x86_64/
         when "aarch64-linux"
-          "ELF 64-bit LSB shared object, ARM aarch64"
+          /ELF 64-bit LSB shared object, ARM aarch64/
         when "x86_64-linux"
-          "ELF 64-bit LSB shared object, x86-64"
+          /ELF 64-bit LSB shared object, x86-64/
         when /\Ax64-mingw(32|-ucrt)/
-          "PE32+ executable (DLL) (console) x86-64, for MS Windows"
+          # Modern `file` prints e.g. "PE32+ executable for MS Windows 6.00
+          # (DLL), x86-64, 6 sections"; older prints "PE32+ executable
+          # (DLL) (console) x86-64, for MS Windows". Match the stable bits.
+          /PE32\+ executable.*\(DLL\).*x86-64/
         else
           "skip"
         end
