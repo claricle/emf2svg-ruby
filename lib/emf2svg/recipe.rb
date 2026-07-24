@@ -7,14 +7,17 @@ require_relative "version"
 
 module Emf2svg
   class Recipe < MiniPortileCMake
+    # Pinned vcpkg commit. Matches the SHA claricle/libemf2svg CI uses;
+    # bump deliberately to refresh the ports tree.
+    VCPKG_REF = "4f95fba7a7d1101bb8acdeb51e4609686449701e"
     ROOT = Pathname.new(File.expand_path("../..", __dir__))
 
     def initialize
       super("libemf2svg", LIBEMF2SVG_VERSION)
 
       @files << {
-        url: "https://github.com/metanorma/libemf2svg/releases/download/v#{LIBEMF2SVG_VERSION}/libemf2svg.tar.gz",
-        sha256: "cd7934cd746752162bb559624b1cdf7af9aa5e02d6965c53d999e447a1426419", # rubocop:disable Layout/LineLength
+        url: "https://github.com/claricle/libemf2svg/releases/download/v#{LIBEMF2SVG_VERSION}/libemf2svg.tar.gz",
+        sha256: "3782453987b477f2d8657c727e30f1e7a509188edfe6de2f7423443635aefd6d", # rubocop:disable Layout/LineLength
       }
 
       @target = ROOT.join(@target).to_s
@@ -28,6 +31,32 @@ module Emf2svg
     def cook
       super
       FileUtils.touch(checkpoint)
+    end
+
+    # Since libemf2svg v1.8.2 the source tarball no longer bundles the
+    # vcpkg tool (it moved too fast to ship as a snapshot). We bootstrap
+    # vcpkg into the work path before CMake configure runs.
+    def configure
+      bootstrap_vcpkg
+      super
+    end
+
+    def bootstrap_vcpkg
+      vcpkg_root = File.join(work_path, "vcpkg")
+      vcpkg_exe = MiniPortile.windows? ? "vcpkg.exe" : "vcpkg"
+      return if File.executable?(File.join(vcpkg_root, vcpkg_exe))
+
+      message("Bootstrapping vcpkg@#{VCPKG_REF} into #{vcpkg_root}\n")
+      FileUtils.rm_rf(vcpkg_root)
+      execute("clone-vcpkg", "git clone --quiet https://github.com/microsoft/vcpkg.git #{vcpkg_root}")
+      Dir.chdir(vcpkg_root) do
+        execute("checkout-vcpkg", "git checkout --quiet #{VCPKG_REF}")
+        if MiniPortile.windows?
+          execute("bootstrap-vcpkg", ".\\bootstrap-vcpkg.bat -disableMetrics")
+        else
+          execute("bootstrap-vcpkg", "./bootstrap-vcpkg.sh -disableMetrics")
+        end
+      end
     end
 
     def windows_native?
