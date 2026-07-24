@@ -88,6 +88,52 @@ same size as EMF (in pixels)
 [[packaging]]
 == Packaging
 
+[[versioning]]
+=== Versioning
+
+The gem version follows the pattern `{libemf2svg_version}.{ruby_iteration}`:
+
+[cols="1,4", options="header"]
+|===
+| Segment | Meaning
+| `libemf2svg_version`
+| The upstream `libemf2svg` release this gem is built against (e.g. `1.8.2`).
+  Bumps when `libemf2svg` cuts a new release.
+
+| `ruby_iteration`
+| A monotonically increasing counter for Ruby-side changes that ship
+  *without* a new `libemf2svg` release -- recipe bug fixes, CI changes,
+  documentation, gemspec tweaks. Resets to `0` whenever
+  `libemf2SVG_version` bumps.
+|===
+
+Examples:
+
+[cols="1,4", options="header"]
+|===
+| Version | Meaning
+| `1.8.2.0` | First release built against `libemf2svg` 1.8.2.
+| `1.8.2.1` | Ruby-side fix on top of the same `libemf2svg` 1.8.2 (e.g. recipe bug).
+| `1.8.3.0` | First release built against `libemf2svg` 1.8.3 (iteration reset).
+|===
+
+To find which `libemf2svg` version a given gem version was built against,
+read the first three segments. To find the Ruby-side patch level within
+that `libemf2svg` version, read the fourth.
+
+The constants live in `lib/emf2svg/version.rb`:
+
+[source,ruby]
+----
+LIBEMF2SVG_VERSION        = "1.8.2"
+LIBEMF2SVG_RUBY_ITERATION = 0
+VERSION                   = "#{LIBEMF2SVG_VERSION}.#{LIBEMF2SVG_RUBY_ITERATION}"
+----
+
+Bump `LIBEMF2SVG_VERSION` and reset `LIBEMF2SVG_RUBY_ITERATION = 0` when
+pulling in a new `libemf2svg` release. Bump only
+`LIBEMF2SVG_RUBY_ITERATION` for Ruby-side-only changes.
+
 === Pre-compiled extensions or building from source
 
 This gem is distributed with pre-compiled native extensions for a set of
@@ -194,22 +240,26 @@ https://rubygems.org[rubygems.org].
 
 === Releasing
 
-Releasing is done automatically with GitHub Actions. Just bump and tag with
-`gem-release`.
+Releasing is done automatically with GitHub Actions. The release
+workflow (`.github/workflows/release.yml`) fires on tag push (`v*`),
+builds pre-compiled native gems for every supported platform, and
+publishes them to https://rubygems.org[rubygems.org].
 
-For a patch release (0.0.x) use:
-
-[source,sh]
-----
-gem bump --version patch --tag --push
-----
-
-For a minor release (0.x.0) use:
+Bump per the <<versioning>> scheme, commit, tag, and push:
 
 [source,sh]
 ----
-gem bump --version minor --tag --push
+# Edit lib/emf2svg/version.rb:
+#   - LIBEMF2SVG_VERSION = "1.8.2"      -> bump if pulling new libemf2svg
+#   - LIBEMF2SVG_RUBY_ITERATION = 0     -> bump (or reset to 0) otherwise
+git commit -am "Bump to vX.Y.Z.N"
+git tag -a vX.Y.Z.N -m "vX.Y.Z.N"
+git push origin main vX.Y.Z.N
 ----
+
+The `release.yml` workflow handles the rest: matrix build, smoke-test
+each native gem by actually converting an EMF, then `gem push` to
+rubygems.org using the `METANORMA_CI_RUBYGEMS_API_KEY` secret.
 
 
 == Contributing

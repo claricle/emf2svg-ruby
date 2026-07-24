@@ -14,19 +14,19 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: any
-            ruby-version: '2.7'
+            ruby-version: '3.3'
           - os: ubuntu-latest
             platform: x86_64-linux
-            ruby-version: '2.7'
+            ruby-version: '3.3'
           - os: windows-latest
             platform: x64-mingw32
-            ruby-version: '2.7'
+            ruby-version: '3.3'
           - os: windows-latest
             platform: x64-mingw-ucrt
-            ruby-version: '3.1'
+            ruby-version: '3.3'
           - os: macos-latest
             platform: x86_64-darwin
-            ruby-version: '2.7'
+            ruby-version: '3.3'
     steps:
     - uses: actions/checkout@v4
 
@@ -35,19 +35,22 @@ jobs:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true
 
-# https://github.com/microsoft/vcpkg/issues/15931
-# no good solution :(
     - name: Workaround for vcpkg
-      if: startsWith(matrix.os, 'ubuntu')
+      if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
+      shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get install gperf
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          sudo apt-get update
+          sudo apt-get install -y gperf autoconf autoconf-archive automake libtool
+        elif [[ "$RUNNER_OS" == "macOS" ]]; then
+          brew install gperf autoconf autoconf-archive automake libtool
+        fi
 
     - run: bundle exec rake gem:native:${{ matrix.platform }}
 
     - uses: actions/upload-artifact@v4
       with:
-        name: pkg
+        name: pkg-${{ matrix.platform }}
         path: pkg/*.gem
 
     - name: Install gem
@@ -65,18 +68,22 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: aarch64-linux
-            ruby-version: '2.7'
+            ruby-version: '3.3'
           - os: macos-latest
             platform: arm64-darwin
-            ruby-version: '2.7'
+            ruby-version: '3.3'
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install packages
-      if: matrix.os == 'ubuntu-latest'
+    - name: Install Ubuntu packages
+      if: startsWith(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update
-        sudo apt-get install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu gperf
+        sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu gperf autoconf autoconf-archive automake libtool
+
+    - name: Install macOS packages
+      if: startsWith(matrix.os, 'macos')
+      run: brew install gperf autoconf autoconf-archive automake libtool
 
     - uses: ruby/setup-ruby@master
       with:
@@ -87,7 +94,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: pkg
+        name: pkg-${{ matrix.platform }}
         path: pkg/*.gem
 
     - name: Install gem
@@ -101,17 +108,18 @@ jobs:
 
     - uses: ruby/setup-ruby@master
       with:
-        ruby-version: '2.7'
+        ruby-version: '3.3'
         bundler-cache: true
 
     - uses: actions/download-artifact@v4
       with:
-        name: pkg
+        pattern: pkg-*
         path: pkg
+        merge-multiple: true
 
     - name: Publish to rubygems.org
       env:
-        RUBYGEMS_API_KEY: ${{secrets.METANORMA_CI_RUBYGEMS_API_KEY}}
+        RUBYGEMS_API_KEY: ${{ secrets.METANORMA_CI_RUBYGEMS_API_KEY }}
       run: |
         mkdir -p ~/.gem
         touch ~/.gem/credentials
