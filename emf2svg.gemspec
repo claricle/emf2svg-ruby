@@ -26,12 +26,8 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_runtime_dependency "ffi", "~> 1.0"
-  spec.add_runtime_dependency "mini_portile2", "~> 2.6"
-
-  spec.add_development_dependency "rubocop", "~> 1.7"
-  spec.add_development_dependency "rubocop-performance", "~> 1.0"
-  spec.add_development_dependency "rubocop-rails", "~> 2.0"
+  spec.add_dependency "ffi", "~> 1.0"
+  spec.add_dependency "mini_portile2", "~> 2.6"
 
   spec.extensions = ["ext/extconf.rb"]
 end
