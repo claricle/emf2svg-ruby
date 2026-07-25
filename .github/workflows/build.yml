@@ -157,6 +157,7 @@ jobs:
           -e target_platform="${TARGET_PLATFORM}" \
           alpine:3.20 sh -c '
             set -eux
+            export VCPKG_FORCE_SYSTEM_BINARIES=1
             apk add --no-cache \
               bash curl git cmake make ninja gcc g++ gperf automake autoconf \
               autoconf-archive libtool linux-headers perl zip unzip tar \
