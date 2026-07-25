@@ -83,7 +83,7 @@ jobs:
             ruby-version: ${{ needs.prepare.outputs.default-ruby-version }}
           - os: windows-11-arm
             platform: aarch64-mingw-ucrt
-            ruby-version: ${{ needs.prepare.outputs.default-ruby-version }}
+            ruby-version: '3.4'
           - os: macos-latest
             platform: arm64-darwin
             ruby-version: ${{ needs.prepare.outputs.default-ruby-version }}
@@ -158,7 +158,7 @@ jobs:
           alpine:3.20 sh -c '
             set -eux
             apk add --no-cache \
-              bash curl git cmake ninja gcc g++ gperf automake autoconf \
+              bash curl git cmake make ninja gcc g++ gperf automake autoconf \
               autoconf-archive libtool linux-headers perl \
               ruby ruby-dev ruby-bundler ruby-rake file
             bundle config set --local path vendor/bundle

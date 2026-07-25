@@ -267,7 +267,7 @@ module Emf2svg
         when "x86_64-linux", "x86_64-linux-musl"
           /ELF 64-bit LSB shared object, x86-64/
         when "aarch64-mingw-ucrt"
-          # `file` output for ARM64 PE DLLs: "PE32+ executable (DLL) (GUI) AArch64, ..."
+          # ARM64 PE DLL: "PE32+ executable (DLL) (GUI) AArch64, ..."
           /PE32\+ executable.*\(DLL\).*AArch64/
         when /\Ax64-mingw(32|-ucrt)/
           /PE32\+ executable.*\(DLL\).*x86-64/
