@@ -41,7 +41,24 @@ module Emf2svg
     # vcpkg into the work path before CMake configure runs.
     def configure
       bootstrap_vcpkg
+      export_toolchain_to_env
       super
+    end
+
+    # Downstream consumers (e.g. metanorma) sometimes patch RbConfig at
+    # runtime to point Ruby's toolchain at a known-good compiler, but
+    # those overrides live in the Ruby process and don't reach the raw
+    # cmake subprocess that mini_portile2 spawns. The result is
+    # "CMAKE_C_COMPILER not set" when the deploy environment has a
+    # stripped PATH. Mirror the resolved RbConfig toolchain into ENV so
+    # the subprocess sees the same compiler the running Ruby was built
+    # with.
+    def export_toolchain_to_env
+      %w[CC CXX LDFLAGS].each do |var|
+        val = RbConfig::CONFIG[var]
+        next if val.nil? || val.empty?
+        ENV[var] = val
+      end
     end
 
     def bootstrap_vcpkg
