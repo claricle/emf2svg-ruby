@@ -130,14 +130,23 @@ jobs:
           - os: ubuntu-latest
             platform: x86_64-linux
             ruby-version: '3.3'
+          - os: ubuntu-24.04-arm
+            platform: aarch64-linux
+            ruby-version: '3.3'
           - os: windows-latest
             platform: x64-mingw32
             ruby-version: '3.3'
           - os: windows-latest
             platform: x64-mingw-ucrt
             ruby-version: '3.3'
+          - os: windows-11-arm
+            platform: aarch64-mingw-ucrt
+            ruby-version: '3.3'
           - os: macos-latest
             platform: arm64-darwin
+            ruby-version: '3.3'
+          - os: macos-15-intel
+            platform: x86_64-darwin
             ruby-version: '3.3'
     steps:
       - uses: actions/checkout@v4
@@ -174,39 +183,37 @@ jobs:
         run: |
           ruby -remf2svg -e "puts File.write('output.svg', Emf2svg.from_file('spec/examples/image1.emf'), mode: 'wb')"
 
-  cross:
+  # Musl builds run inside an Alpine container so the resulting libs
+  # link against musl libc, not the runner's glibc.
+  build-musl:
     needs: bump
     if: always() && !cancelled() && !failure() && (needs.bump.result == 'success' || needs.bump.result == 'skipped')
     runs-on: ${{ matrix.os }}
+    container:
+      image: alpine:3.20
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
-            platform: aarch64-linux
-            ruby-version: '3.3'
-          - os: macos-latest
-            platform: x86_64-darwin
-            ruby-version: '3.3'
+            platform: x86_64-linux-musl
+          - os: ubuntu-24.04-arm
+            platform: aarch64-linux-musl
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.bump.outputs.sha || github.ref }}
 
-      - name: Install Ubuntu packages
-        if: startsWith(matrix.os, 'ubuntu')
+      - name: Install Alpine build deps
+        shell: sh
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu gperf autoconf autoconf-archive automake libtool
+          apk add --no-cache \
+            bash curl git cmake ninja gcc g++ gperf automake autoconf \
+            autoconf-archive libtool linux-headers perl \
+            ruby ruby-dev ruby-bundler ruby-rake file
 
-      - name: Install macOS packages
-        if: startsWith(matrix.os, 'macos')
-        run: brew install gperf autoconf autoconf-archive automake libtool
-
-      - uses: ruby/setup-ruby@master
-        with:
-          ruby-version: ${{ matrix.ruby-version }}
-          bundler-cache: true
+      - name: Bundle install
+        run: bundle install --jobs 4 --retry 3
 
       - run: bundle exec rake gem:native:${{ matrix.platform }}
 
@@ -215,11 +222,8 @@ jobs:
           name: pkg-${{ matrix.platform }}
           path: pkg/*.gem
 
-      - name: Install gem
-        run: gem install -b pkg/emf2svg-*.gem
-
   publish:
-    needs: [ bump, build, cross ]
+    needs: [ bump, build, build-musl ]
     if: always() && !cancelled() && !failure()
     runs-on: ubuntu-latest
     steps:

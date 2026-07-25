@@ -72,13 +72,22 @@ jobs:
           - os: ubuntu-latest
             platform: x86_64-linux
             ruby-version: ${{ needs.prepare.outputs.default-ruby-version }}
+          - os: ubuntu-24.04-arm
+            platform: aarch64-linux
+            ruby-version: ${{ needs.prepare.outputs.default-ruby-version }}
           - os: windows-latest
             platform: x64-mingw32
             ruby-version: ${{ needs.prepare.outputs.default-ruby-version }}
           - os: windows-latest
             platform: x64-mingw-ucrt
             ruby-version: ${{ needs.prepare.outputs.default-ruby-version }}
+          - os: windows-11-arm
+            platform: aarch64-mingw-ucrt
+            ruby-version: ${{ needs.prepare.outputs.default-ruby-version }}
           - os: macos-latest
+            platform: arm64-darwin
+            ruby-version: ${{ needs.prepare.outputs.default-ruby-version }}
+          - os: macos-15-intel
             platform: x86_64-darwin
             ruby-version: ${{ needs.prepare.outputs.default-ruby-version }}
     steps:
@@ -114,47 +123,37 @@ jobs:
         name: pkg-${{ matrix.platform }}
         path: pkg/*.gem
 
-  cross-build:
-    name: build ${{ matrix.os }}, ${{ matrix.ruby-version }}, ${{ matrix.platform }}
+  # Musl builds run inside an Alpine container so the resulting libs
+  # link against musl libc, not the runner's glibc.
+  build-musl:
+    name: build-musl ${{ matrix.os }}, ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     needs: prepare
+    container:
+      image: alpine:3.20
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
-            platform: aarch64-linux
-            ruby-version: ${{ needs.prepare.outputs.default-ruby-version }}
-          - os: macos-latest
-            platform: arm64-darwin
-            ruby-version: ${{ needs.prepare.outputs.default-ruby-version }}
+            platform: x86_64-linux-musl
+          - os: ubuntu-24.04-arm
+            platform: aarch64-linux-musl
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install Ubuntu packages
-      if: startsWith(matrix.os, 'ubuntu')
+    - name: Install Alpine build deps
+      shell: sh
       run: |
-        sudo apt-get update
-        sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu gperf autoconf autoconf-archive automake libtool
+        apk add --no-cache \
+          bash curl git cmake ninja gcc g++ gperf automake autoconf \
+          autoconf-archive libtool linux-headers perl \
+          ruby ruby-dev ruby-bundler ruby-rake file
 
-    - name: Install macOS packages
-      if: startsWith(matrix.os, 'macos')
-      run: brew install gperf autoconf autoconf-archive automake libtool
+    - name: Bundle install
+      run: bundle install --jobs 4 --retry 3
 
-    - name: Install Ruby
-      uses: ruby/setup-ruby@master
-      with:
-        ruby-version: ${{ matrix.ruby-version }}
-        bundler-cache: true
-
-    - name: Build native extension
-      run: bundle exec rake gem:native:${{ matrix.platform }}
-
-    - if: matrix.platform != 'aarch64-linux'
-      uses: metanorma/ci/native-deps-action@main
-      with:
-        libname: emf2svg
-        directory: lib/emf2svg
+    - run: bundle exec rake gem:native:${{ matrix.platform }}
 
     - uses: actions/upload-artifact@v4
       with:
@@ -162,7 +161,7 @@ jobs:
         path: pkg/*.gem
 
   test-build:
-    needs: [ prepare, build, cross-build ]
+    needs: [ prepare, build, build-musl ]
     runs-on: ${{ matrix.os }}
 
     continue-on-error: ${{ matrix.ruby.experimental }}
@@ -194,7 +193,7 @@ jobs:
         ruby -remf2svg -e "puts File.write('output.svg', Emf2svg.from_file('spec/examples/image1.emf'), mode: 'wb')"
 
   test-build-any:
-    needs: [ prepare, build, cross-build ]
+    needs: [ prepare, build, build-musl ]
     runs-on: ${{ matrix.os }}
 
     continue-on-error: ${{ matrix.ruby.experimental }}
