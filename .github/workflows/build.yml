@@ -125,12 +125,17 @@ jobs:
 
   # Musl builds run inside an Alpine container so the resulting libs
   # link against musl libc, not the runner's glibc.
+  #
+  # GitHub Actions does not allow JS-based actions (checkout, upload-
+  # artifact, etc.) inside an Alpine container on ARM64 runners
+  # (limitation noted at actions/runner#2006). We therefore do the
+  # checkout and artifact upload on the host, and run the actual build
+  # via `docker run` with the workspace mounted. This works on both
+  # x86_64 and arm64 hosts -- the Alpine image matches the host arch.
   build-musl:
     name: build-musl ${{ matrix.os }}, ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     needs: prepare
-    container:
-      image: alpine:3.20
     strategy:
       fail-fast: false
       matrix:
@@ -142,18 +147,24 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install Alpine build deps
-      shell: sh
+    - name: Build gem in Alpine container
+      env:
+        TARGET_PLATFORM: ${{ matrix.platform }}
       run: |
-        apk add --no-cache \
-          bash curl git cmake ninja gcc g++ gperf automake autoconf \
-          autoconf-archive libtool linux-headers perl \
-          ruby ruby-dev ruby-bundler ruby-rake file
-
-    - name: Bundle install
-      run: bundle install --jobs 4 --retry 3
-
-    - run: bundle exec rake gem:native:${{ matrix.platform }}
+        docker run --rm \
+          -v "$PWD:/work" \
+          -w /work \
+          -e target_platform="${TARGET_PLATFORM}" \
+          alpine:3.20 sh -c '
+            set -eux
+            apk add --no-cache \
+              bash curl git cmake ninja gcc g++ gperf automake autoconf \
+              autoconf-archive libtool linux-headers perl \
+              ruby ruby-dev ruby-bundler ruby-rake file
+            bundle config set --local path vendor/bundle
+            bundle install --jobs 4 --retry 3
+            bundle exec rake gem:native:"'"${TARGET_PLATFORM}"'"
+          '
 
     - uses: actions/upload-artifact@v4
       with:
