@@ -92,6 +92,11 @@ module Emf2svg
     end
 
     def drop_target_triplet?
+      # Windows ARM64 builds against MSVC with static linking. vcpkg's
+      # auto-detection would pick arm64-windows (dynamic) instead of
+      # arm64-windows-static, so always pass the triplet explicitly.
+      return false if target_platform == "aarch64-mingw-ucrt"
+
       windows_native? || host_platform.eql?(target_platform)
     end
 
@@ -189,6 +194,12 @@ module Emf2svg
         case @host
         when /\Ax86_64.*mingw32/
           "x64-mingw32"
+        when /\A(aarch64|arm64).*mingw.*ucrt/
+          "aarch64-mingw-ucrt"
+        when /\Ax86_64.*linux-musl/
+          "x86_64-linux-musl"
+        when /\A(arm64|aarch64).*linux-musl/
+          "aarch64-linux-musl"
         when /\Ax86_64.*linux/
           "x86_64-linux"
         when /\A(arm64|aarch64).*linux/
@@ -209,8 +220,14 @@ module Emf2svg
           "arm64-darwin"
         when /\Ax86_64.*(darwin|macos|osx)/
           "x86_64-darwin"
+        when /\A(arm64|aarch64).*linux-musl/
+          "aarch64-linux-musl"
+        when /\Ax86_64.*linux-musl/
+          "x86_64-linux-musl"
         when /\A(arm64|aarch64).*linux/
           "aarch64-linux"
+        when /\Aaarch64-mingw-ucrt/, /\A(arm64|aarch64).*mingw.*ucrt/
+          "aarch64-mingw-ucrt"
         else
           ENV.fetch("target_platform", host_platform)
         end
@@ -225,8 +242,14 @@ module Emf2svg
           "x64-osx"
         when "aarch64-linux"
           "arm64-linux"
+        when "aarch64-linux-musl"
+          "arm64-linux-musl"
         when "x86_64-linux"
           "x64-linux"
+        when "x86_64-linux-musl"
+          "x64-linux-musl"
+        when "aarch64-mingw-ucrt"
+          "arm64-windows-static"
         when /\Ax64-mingw(32|-ucrt)/
           "x64-mingw-static"
         end
@@ -239,14 +262,14 @@ module Emf2svg
           /Mach-O 64-bit dynamically linked shared library arm64/
         when "x86_64-darwin"
           /Mach-O 64-bit dynamically linked shared library x86_64/
-        when "aarch64-linux"
+        when "aarch64-linux", "aarch64-linux-musl"
           /ELF 64-bit LSB shared object, ARM aarch64/
-        when "x86_64-linux"
+        when "x86_64-linux", "x86_64-linux-musl"
           /ELF 64-bit LSB shared object, x86-64/
+        when "aarch64-mingw-ucrt"
+          # `file` output for ARM64 PE DLLs: "PE32+ executable (DLL) (GUI) AArch64, ..."
+          /PE32\+ executable.*\(DLL\).*AArch64/
         when /\Ax64-mingw(32|-ucrt)/
-          # Modern `file` prints e.g. "PE32+ executable for MS Windows 6.00
-          # (DLL), x86-64, 6 sections"; older prints "PE32+ executable
-          # (DLL) (console) x86-64, for MS Windows". Match the stable bits.
           /PE32\+ executable.*\(DLL\).*x86-64/
         else
           "skip"
