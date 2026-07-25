@@ -57,6 +57,7 @@ module Emf2svg
       %w[CC CXX LDFLAGS].each do |var|
         val = RbConfig::CONFIG[var]
         next if val.nil? || val.empty?
+
         ENV[var] = val
       end
     end
