@@ -159,8 +159,9 @@ jobs:
             set -eux
             export VCPKG_FORCE_SYSTEM_BINARIES=1
             apk add --no-cache \
-              bash curl git cmake make ninja gcc g++ gperf automake autoconf \
-              autoconf-archive libtool linux-headers perl zip unzip tar \
+              build-base bash curl git cmake make ninja gcc g++ gperf \
+              automake autoconf autoconf-archive libtool linux-headers \
+              perl zip unzip tar python3 pkgconfig \
               ruby ruby-dev ruby-bundler ruby-rake file
             git config --global --add safe.directory /work
             bundle config set --local path vendor/bundle
