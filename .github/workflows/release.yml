@@ -110,9 +110,6 @@ jobs:
   publish:
     needs: [ build, cross ]
     runs-on: ubuntu-latest
-    # Must match the environment name configured on the gem's Trusted
-    # Publishers page on rubygems.org.
-    environment: gem-publish
     steps:
     - uses: actions/checkout@v4
 
