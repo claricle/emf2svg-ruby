@@ -1,6 +1,6 @@
 = emf2svg Ruby gem for EMF to SVG conversion
 
-image:https://github.com/metanorma/emf2svg-ruby/actions/workflows/build.yml/badge.svg["Build", link="https://github.com/metanorma/emf2svg-ruby/actions/workflows/build.yml"]
+image:https://github.com/claricle/emf2svg-ruby/actions/workflows/build.yml/badge.svg["Build", link="https://github.com/claricle/emf2svg-ruby/actions/workflows/build.yml"]
 image:https://badge.fury.io/rb/emf2svg.svg["Gem Version", link="https://badge.fury.io/rb/emf2svg"]
 
 == Purpose
@@ -9,8 +9,12 @@ The `emf2svg` Ruby gem provides a Ruby interface to the
 https://github.com/kakwa/libemf2svg[libemf2svg] EMF-to-SVG conversion library.
 
 NOTE: This gem currently uses the
-https://github.com/metanorma/libemf2svg[Metanorma fork of libemf2svg]
-until feature up-streaming is complete.
+https://github.com/claricle/libemf2svg[claricle fork of libemf2svg]
+where the latest portability fixes (MinGW/MSys support, arm64 CI,
+restored macOS x86_64 / Windows ARM64 / MSys2 workflows, etc.) live
+while waiting for further upstreaming. The source tarball this gem
+compiles from is published from
+https://github.com/claricle/libemf2svg/releases[claricle/libemf2svg/releases].
 
 == Prerequisites
 
@@ -265,14 +269,14 @@ rubygems.org using the `METANORMA_CI_RUBYGEMS_API_KEY` secret.
 == Contributing
 
 Bug reports and pull requests are welcome on GitHub at
-https://github.com/metanorma/emf2svg-ruby. This project is intended to be a
+https://github.com/claricle/emf2svg-ruby. This project is intended to be a
 safe, welcoming space for collaboration, and contributors are expected to adhere
 to the
-https://github.com/metanorma/emf2svg-ruby/blob/master/CODE_OF_CONDUCT.md[code of conduct].
+https://github.com/claricle/emf2svg-ruby/blob/main/CODE_OF_CONDUCT.md[code of conduct].
 
 
 == Code of Conduct
 
 Everyone interacting in the emf2svg project's codebases, issue trackers, chat
-rooms and mailing lists is expected to follow the
-https://github.com/metanorma/emf2svg-ruby/blob/master/CODE_OF_CONDUCT.md[code of conduct].
+rooms, mailing lists is expected to follow the
+https://github.com/claricle/emf2svg-ruby/blob/main/CODE_OF_CONDUCT.md[code of conduct].
