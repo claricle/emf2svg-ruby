@@ -4,16 +4,121 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      bump-type:
+        description: 'What to bump before tagging'
+        type: choice
+        options:
+          - current
+          - iteration
+          - libemf2svg
+        default: iteration
+      libemf2svg-version:
+        description: 'New libemf2svg version (required when bump-type=libemf2svg, e.g. 1.8.3)'
+        type: string
+        required: false
 
-# id-token: write is required for RubyGems.org Trusted Publishing
-# (OIDC). The publish job exchanges the GitHub OIDC token for a
-# short-lived rubygems API key -- no long-lived secret in the repo.
+# contents: write is needed for workflow_dispatch to push the bump commit + tag.
+# id-token: write is required for RubyGems.org Trusted Publishing (OIDC).
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
+  bump:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.sha.outputs.sha }}
+      new-version: ${{ steps.bump.outputs.new-version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@master
+        with:
+          ruby-version: '3.3'
+
+      - name: Bump version.rb
+        id: bump
+        shell: bash
+        env:
+          BUMP_TYPE: ${{ inputs.bump-type }}
+          LIBEMF2SVG_VERSION_INPUT: ${{ inputs.libemf2svg-version }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$BUMP_TYPE" == "current" ]]; then
+            NEW_VERSION=$(ruby -Ilib -remf2svg/version -e 'puts Emf2svg::VERSION')
+            echo "new-version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+            echo "sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+            echo "Releasing current VERSION (${NEW_VERSION}) -- no bump."
+            exit 0
+          fi
+
+          ruby <<'RUBY'
+            bump_type = ENV.fetch("BUMP_TYPE")
+            path = "lib/emf2svg/version.rb"
+            content = File.read(path)
+
+            case bump_type
+            when "iteration"
+              m = %r{LIBEMF2SVG_RUBY_ITERATION = (\d+)}.match(content) or
+                raise "Could not find LIBEMF2SVG_RUBY_ITERATION in #{path}"
+              content.sub!(%r{LIBEMF2SVG_RUBY_ITERATION = \d+},
+                           "LIBEMF2SVG_RUBY_ITERATION = #{m[1].to_i + 1}") or
+                raise "Failed to substitute iteration"
+            when "libemf2svg"
+              new_v = ENV.fetch("LIBEMF2SVG_VERSION_INPUT", "")
+              raise "libemf2svg-version input is required when bump-type=libemf2svg" if new_v.empty?
+              raise "Invalid version format: #{new_v} (expected X.Y.Z)" unless new_v.match?(/\A\d+\.\d+\.\d+\z/)
+              content.sub!(%r{LIBEMF2SVG_VERSION = "[^"]+"},
+                           "LIBEMF2SVG_VERSION = \"#{new_v}\"") or
+                raise "Failed to substitute libemf2svg version"
+              content.sub!(%r{LIBEMF2SVG_RUBY_ITERATION = \d+},
+                           "LIBEMF2SVG_RUBY_ITERATION = 0") or
+                raise "Failed to reset iteration"
+            else
+              raise "Unknown bump-type: #{bump_type}"
+            end
+
+            File.write(path, content)
+            load File.expand_path(path)
+            File.open(ENV.fetch("GITHUB_OUTPUT"), "a") do |f|
+              f.puts "new-version=#{Emf2svg::VERSION}"
+            end
+            warn "Bumped to #{Emf2svg::VERSION}"
+          RUBY
+
+          NEW_VERSION=$(ruby -Ilib -remf2svg/version -e 'puts Emf2svg::VERSION')
+          echo "new-version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/emf2svg/version.rb
+          git commit -m "Release v${NEW_VERSION}"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Show what's being released
+        run: |
+          echo "Releasing version: ${{ steps.bump.outputs.new-version }}"
+          git --no-pager log --oneline -1 "${{ steps.bump.outputs.sha }}"
+
+      - name: Push bump commit + tag
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.new-version }}
+          SHA: ${{ steps.bump.outputs.sha }}
+        run: |
+          # Only push the bump commit if it exists (skipped for bump-type=current).
+          if [[ -n "${SHA}" && "${SHA}" != "${{ github.sha }}" ]]; then
+            git push origin "HEAD:master"
+          fi
+          git tag -a "v${NEW_VERSION}" -m "v${NEW_VERSION}" "${SHA}"
+          git push origin "v${NEW_VERSION}"
+
   build:
+    needs: bump
+    if: always() && !cancelled() && !failure() && (needs.bump.result == 'success' || needs.bump.result == 'skipped')
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -35,39 +140,43 @@ jobs:
             platform: x86_64-darwin
             ruby-version: '3.3'
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump.outputs.sha || github.ref }}
 
-    - uses: ruby/setup-ruby@master
-      with:
-        ruby-version: ${{ matrix.ruby-version }}
-        bundler-cache: true
+      - uses: ruby/setup-ruby@master
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
 
-    - name: Workaround for vcpkg
-      if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
-      shell: bash
-      run: |
-        if [[ "$RUNNER_OS" == "Linux" ]]; then
-          sudo apt-get update
-          sudo apt-get install -y gperf autoconf autoconf-archive automake libtool
-        elif [[ "$RUNNER_OS" == "macOS" ]]; then
-          brew install gperf autoconf autoconf-archive automake libtool
-        fi
+      - name: Workaround for vcpkg
+        if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y gperf autoconf autoconf-archive automake libtool
+          elif [[ "$RUNNER_OS" == "macOS" ]]; then
+            brew install gperf autoconf autoconf-archive automake libtool
+          fi
 
-    - run: bundle exec rake gem:native:${{ matrix.platform }}
+      - run: bundle exec rake gem:native:${{ matrix.platform }}
 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: pkg-${{ matrix.platform }}
-        path: pkg/*.gem
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pkg-${{ matrix.platform }}
+          path: pkg/*.gem
 
-    - name: Install gem
-      run: gem install -b pkg/emf2svg-*.gem
+      - name: Install gem
+        run: gem install -b pkg/emf2svg-*.gem
 
-    - name: Test conversion
-      run: |
-        ruby -remf2svg -e "puts File.write('output.svg', Emf2svg.from_file('spec/examples/image1.emf'), mode: 'wb')"
+      - name: Test conversion
+        run: |
+          ruby -remf2svg -e "puts File.write('output.svg', Emf2svg.from_file('spec/examples/image1.emf'), mode: 'wb')"
 
   cross:
+    needs: bump
+    if: always() && !cancelled() && !failure() && (needs.bump.result == 'success' || needs.bump.result == 'skipped')
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -80,53 +189,58 @@ jobs:
             platform: arm64-darwin
             ruby-version: '3.3'
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump.outputs.sha || github.ref }}
 
-    - name: Install Ubuntu packages
-      if: startsWith(matrix.os, 'ubuntu')
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu gperf autoconf autoconf-archive automake libtool
+      - name: Install Ubuntu packages
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu gperf autoconf autoconf-archive automake libtool
 
-    - name: Install macOS packages
-      if: startsWith(matrix.os, 'macos')
-      run: brew install gperf autoconf autoconf-archive automake libtool
+      - name: Install macOS packages
+        if: startsWith(matrix.os, 'macos')
+        run: brew install gperf autoconf autoconf-archive automake libtool
 
-    - uses: ruby/setup-ruby@master
-      with:
-        ruby-version: ${{ matrix.ruby-version }}
-        bundler-cache: true
+      - uses: ruby/setup-ruby@master
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
 
-    - run: bundle exec rake gem:native:${{ matrix.platform }}
+      - run: bundle exec rake gem:native:${{ matrix.platform }}
 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: pkg-${{ matrix.platform }}
-        path: pkg/*.gem
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pkg-${{ matrix.platform }}
+          path: pkg/*.gem
 
-    - name: Install gem
-      run: gem install -b pkg/emf2svg-*.gem
+      - name: Install gem
+        run: gem install -b pkg/emf2svg-*.gem
 
   publish:
-    needs: [ build, cross ]
+    needs: [ bump, build, cross ]
+    if: always() && !cancelled() && !failure()
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump.outputs.sha || github.ref }}
 
-    - uses: ruby/setup-ruby@master
-      with:
-        ruby-version: '3.3'
-        bundler-cache: true
+      - uses: ruby/setup-ruby@master
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
 
-    - uses: actions/download-artifact@v4
-      with:
-        pattern: pkg-*
-        path: pkg
-        merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pkg-*
+          path: pkg
+          merge-multiple: true
 
-    - name: Configure RubyGems credentials (Trusted Publishing / OIDC)
-      uses: rubygems/configure-rubygems-credentials@main
+      - name: Configure RubyGems credentials (Trusted Publishing / OIDC)
+        uses: rubygems/configure-rubygems-credentials@main
 
-    - name: Publish to rubygems.org
-      run: |
-        for gem in pkg/*.gem; do gem push -V "$gem"; done
+      - name: Publish to rubygems.org
+        run: |
+          for gem in pkg/*.gem; do gem push -V "$gem"; done

@@ -244,26 +244,30 @@ https://rubygems.org[rubygems.org].
 
 === Releasing
 
-Releasing is done automatically with GitHub Actions. The release
-workflow (`.github/workflows/release.yml`) fires on tag push (`v*`),
-builds pre-compiled native gems for every supported platform, and
-publishes them to https://rubygems.org[rubygems.org].
+Releases are cut from the
+https://github.com/claricle/emf2svg-ruby/actions/workflows/release.yml[release.yml]
+workflow. It has two triggers:
 
-Bump per the <<versioning>> scheme, commit, tag, and push:
+`workflow_dispatch` (preferred):: Manually triggered from the Actions UI
+  with a `bump-type` input that decides how `lib/emf2svg/version.rb` is
+  rewritten before tagging:
++
+[cols="1,4", options="header"]
+|===
+| `bump-type` | Effect
+| `current`     | Tag and publish the VERSION currently in `version.rb` (no edit, no commit). Use this for the first release of a new `LIBEMF2SVG_VERSION`.
+| `iteration`   | Bump `LIBEMF2SVG_RUBY_ITERATION` by 1, commit, tag, publish. Use this for Ruby-side-only fixes (recipe, CI, docs).
+| `libemf2svg`  | Set `LIBEMF2SVG_VERSION` to the supplied `libemf2svg-version` (e.g. `1.8.3`), reset `LIBEMF2SVG_RUBY_ITERATION` to `0`, commit, tag, publish.
+|===
++
+The workflow pushes the bump commit (if any) to `master`, pushes the
+`vX.Y.Z.N` tag, then builds pre-compiled native gems for every supported
+platform and publishes them to https://rubygems.org[rubygems.org] using
+RubyGems Trusted Publishing (OIDC).
 
-[source,sh]
-----
-# Edit lib/emf2svg/version.rb:
-#   - LIBEMF2SVG_VERSION = "1.8.2"      -> bump if pulling new libemf2svg
-#   - LIBEMF2SVG_RUBY_ITERATION = 0     -> bump (or reset to 0) otherwise
-git commit -am "Bump to vX.Y.Z.N"
-git tag -a vX.Y.Z.N -m "vX.Y.Z.N"
-git push origin main vX.Y.Z.N
-----
-
-The `release.yml` workflow handles the rest: matrix build, smoke-test
-each native gem by actually converting an EMF, then `gem push` to
-rubygems.org using the `METANORMA_CI_RUBYGEMS_API_KEY` secret.
+`push: tags: v*`::  If a human pushes a tag manually (e.g. for an
+  emergency re-release after editing `version.rb` locally), the same
+  build + publish pipeline runs without the bump step.
 
 
 == Contributing
