@@ -267,8 +267,10 @@ module Emf2svg
         when "x86_64-linux", "x86_64-linux-musl"
           /ELF 64-bit LSB shared object, x86-64/
         when "aarch64-mingw-ucrt"
-          # ARM64 PE DLL: "PE32+ executable (DLL) (GUI) AArch64, ..."
-          /PE32\+ executable.*\(DLL\).*AArch64/
+          # `file` prints "PE32+ executable for MS Windows 6.02 (DLL),
+          # ARM64, 6 sections". Note: ARM64 (not AArch64), and (DLL)
+          # may appear before or after the arch token.
+          /PE32\+ executable.*ARM64/i
         when /\Ax64-mingw(32|-ucrt)/
           /PE32\+ executable.*\(DLL\).*x86-64/
         else

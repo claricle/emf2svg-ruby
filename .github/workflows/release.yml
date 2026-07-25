@@ -218,8 +218,9 @@ jobs:
               set -eux
               apk add --no-cache \
                 bash curl git cmake make ninja gcc g++ gperf automake autoconf \
-                autoconf-archive libtool linux-headers perl \
+                autoconf-archive libtool linux-headers perl zip unzip tar \
                 ruby ruby-dev ruby-bundler ruby-rake file
+              git config --global --add safe.directory /work
               bundle config set --local path vendor/bundle
               bundle install --jobs 4 --retry 3
               bundle exec rake gem:native:"'"${TARGET_PLATFORM}"'"
