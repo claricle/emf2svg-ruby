@@ -137,7 +137,7 @@ jobs:
             platform: x64-mingw-ucrt
             ruby-version: '3.3'
           - os: macos-latest
-            platform: x86_64-darwin
+            platform: arm64-darwin
             ruby-version: '3.3'
     steps:
       - uses: actions/checkout@v4
@@ -186,7 +186,7 @@ jobs:
             platform: aarch64-linux
             ruby-version: '3.3'
           - os: macos-latest
-            platform: arm64-darwin
+            platform: x86_64-darwin
             ruby-version: '3.3'
     steps:
       - uses: actions/checkout@v4
