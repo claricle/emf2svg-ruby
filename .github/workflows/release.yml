@@ -5,6 +5,13 @@ on:
     tags:
       - 'v*'
 
+# id-token: write is required for RubyGems.org Trusted Publishing
+# (OIDC). The publish job exchanges the GitHub OIDC token for a
+# short-lived rubygems API key -- no long-lived secret in the repo.
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -103,6 +110,9 @@ jobs:
   publish:
     needs: [ build, cross ]
     runs-on: ubuntu-latest
+    # Must match the environment name configured on the gem's Trusted
+    # Publishers page on rubygems.org.
+    environment: gem-publish
     steps:
     - uses: actions/checkout@v4
 
@@ -117,16 +127,9 @@ jobs:
         path: pkg
         merge-multiple: true
 
+    - name: Configure RubyGems credentials (Trusted Publishing / OIDC)
+      uses: rubygems/configure-rubygems-credentials@main
+
     - name: Publish to rubygems.org
-      env:
-        RUBYGEMS_API_KEY: ${{ secrets.METANORMA_CI_RUBYGEMS_API_KEY }}
       run: |
-        mkdir -p ~/.gem
-        touch ~/.gem/credentials
-        cat > ~/.gem/credentials << EOF
-        ---
-        :rubygems_api_key: ${RUBYGEMS_API_KEY}
-        EOF
-        chmod 0600 ~/.gem/credentials
-        gem signin
-        for gem in pkg/*.gem; do gem push -V $gem; done
+        for gem in pkg/*.gem; do gem push -V "$gem"; done
