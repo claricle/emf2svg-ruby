@@ -111,7 +111,7 @@ jobs:
         run: |
           # Only push the bump commit if it exists (skipped for bump-type=current).
           if [[ -n "${SHA}" && "${SHA}" != "${{ github.sha }}" ]]; then
-            git push origin "HEAD:master"
+            git push origin "HEAD:${{ github.event.repository.default_branch }}"
           fi
           git tag -a "v${NEW_VERSION}" -m "v${NEW_VERSION}" "${SHA}"
           git push origin "v${NEW_VERSION}"
