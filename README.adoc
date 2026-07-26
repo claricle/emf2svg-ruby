@@ -152,12 +152,16 @@ The pre-compiled platforms are:
 * `x86_64-linux` (glibc)
 * `x86_64-linux-musl` (Alpine and other musl-based distros)
 * `aarch64-linux` (glibc)
-* `aarch64-linux-musl` (Alpine and other musl-based distros)
 * `x86_64-darwin`
 * `arm64-darwin`
 * `x64-mingw32` (legacy RubyInstaller < 3.0)
 * `x64-mingw-ucrt` (RubyInstaller >= 3.1)
 * `aarch64-mingw-ucrt` (Windows on ARM)
+
+NOTE: `aarch64-linux-musl` is not currently shipped. vcpkg has no
+binary cache for that triplet, so first-time builds compile all deps
+from source on native arm64-musl and exceed CI time limits. Track
+re-adding it in a follow-up.
 
 When installing the gem, Ruby will automatically select a pre-compiled version
 suitable for your platform, or opt to install from source if the platform

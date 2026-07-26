@@ -130,8 +130,14 @@ jobs:
   # artifact, etc.) inside an Alpine container on ARM64 runners
   # (limitation noted at actions/runner#2006). We therefore do the
   # checkout and artifact upload on the host, and run the actual build
-  # via `docker run` with the workspace mounted. This works on both
-  # x86_64 and arm64 hosts -- the Alpine image matches the host arch.
+  # via `docker run` with the workspace mounted.
+  #
+  # NOTE: aarch64-linux-musl is intentionally absent. vcpkg has no
+  # binary cache for arm64-linux-musl, so first-time builds compile
+  # freetype/fontconfig/libxml2/etc. from source on native arm64-musl,
+  # which consistently exceeds the 6h job timeout. Re-add once vcpkg
+  # publishes arm64-linux-musl binaries or we ship a pre-built Alpine
+  # arm64 image with the deps already compiled.
   build-musl:
     name: build-musl ${{ matrix.os }}, ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
@@ -142,8 +148,6 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: x86_64-linux-musl
-          - os: ubuntu-24.04-arm
-            platform: aarch64-linux-musl
     steps:
     - uses: actions/checkout@v4
 

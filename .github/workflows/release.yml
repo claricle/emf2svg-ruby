@@ -189,6 +189,10 @@ jobs:
   # GitHub Actions does not allow JS-based actions inside an Alpine
   # container on ARM64 runners. We do checkout + artifact on the host
   # and run the build via `docker run` with the workspace mounted.
+  #
+  # NOTE: aarch64-linux-musl intentionally omitted -- vcpkg compiles
+  # all deps from source on arm64-musl and exceeds the 6h job limit.
+  # See build.yml for details.
   build-musl:
     needs: bump
     if: always() && !cancelled() && !failure() && (needs.bump.result == 'success' || needs.bump.result == 'skipped')
@@ -199,8 +203,6 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: x86_64-linux-musl
-          - os: ubuntu-24.04-arm
-            platform: aarch64-linux-musl
     steps:
       - uses: actions/checkout@v4
         with:
