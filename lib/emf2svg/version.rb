@@ -13,6 +13,6 @@ module Emf2svg
   #
   # See README.adoc -> "Versioning" for the rationale and examples.
   LIBEMF2SVG_VERSION = "1.8.2"
-  LIBEMF2SVG_RUBY_ITERATION = 2
+  LIBEMF2SVG_RUBY_ITERATION = 3
   VERSION = "#{LIBEMF2SVG_VERSION}.#{LIBEMF2SVG_RUBY_ITERATION}"
 end
