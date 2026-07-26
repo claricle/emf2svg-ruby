@@ -184,15 +184,14 @@ jobs:
           ruby -remf2svg -e "puts File.write('output.svg', Emf2svg.from_file('spec/examples/image1.emf'), mode: 'wb')"
 
   # Musl builds run inside an Alpine container so the resulting libs
-  # link against musl libc, not the runner's glibc.
+  # link against musl libc, not the runner's glibc. They link against
+  # the distro's own -dev packages (freetype/fontconfig/libxml2/libpng)
+  # via pkg-config -- vcpkg has no public binary cache for musl
+  # triplets, so building deps from source would exceed CI timeouts.
   #
   # GitHub Actions does not allow JS-based actions inside an Alpine
   # container on ARM64 runners. We do checkout + artifact on the host
   # and run the build via `docker run` with the workspace mounted.
-  #
-  # NOTE: aarch64-linux-musl intentionally omitted -- vcpkg compiles
-  # all deps from source on arm64-musl and exceeds the 6h job limit.
-  # See build.yml for details.
   build-musl:
     needs: bump
     if: always() && !cancelled() && !failure() && (needs.bump.result == 'success' || needs.bump.result == 'skipped')
@@ -203,6 +202,8 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: x86_64-linux-musl
+          - os: ubuntu-24.04-arm
+            platform: aarch64-linux-musl
     steps:
       - uses: actions/checkout@v4
         with:
@@ -218,11 +219,12 @@ jobs:
             -e target_platform="${TARGET_PLATFORM}" \
             alpine:3.20 sh -c '
               set -eux
-              export VCPKG_FORCE_SYSTEM_BINARIES=1
               apk add --no-cache \
                 build-base bash curl git cmake make ninja gcc g++ gperf \
                 automake autoconf autoconf-archive libtool linux-headers \
-                perl zip unzip tar python3 pkgconfig gcompat argp-standalone \
+                perl zip unzip tar python3 pkgconfig \
+                freetype-dev fontconfig-dev libpng-dev libxml2-dev \
+                gettext-dev zlib-dev \
                 ruby ruby-dev ruby-bundler ruby-rake file
               git config --global --add safe.directory /work
               bundle config set --local path vendor/bundle

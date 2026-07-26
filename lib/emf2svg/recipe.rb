@@ -38,9 +38,14 @@ module Emf2svg
 
     # Since libemf2svg v1.8.2 the source tarball no longer bundles the
     # vcpkg tool (it moved too fast to ship as a snapshot). We bootstrap
-    # vcpkg into the work path before CMake configure runs.
+    # vcpkg into the work path before CMake configure runs -- unless
+    # we're targeting musl, in which case vcpkg has no public binary
+    # cache for arm64-linux-musl / x64-linux-musl and would compile
+    # every dependency from source (hours). For musl we use the
+    # distribution's own -dev packages (freetype, fontconfig, etc.)
+    # via pkg-config instead.
     def configure
-      bootstrap_vcpkg
+      bootstrap_vcpkg unless use_system_libs?
       export_toolchain_to_env
       super
     end
@@ -110,13 +115,23 @@ module Emf2svg
       opts << "-DCMAKE_BUILD_TYPE=Release"
       opts << "-DLONLY=ON"
 
-      unless target_triplet.nil? || drop_target_triplet?
-        opts << "-DVCPKG_TARGET_TRIPLET=#{target_triplet}"
+      unless use_system_libs?
+        unless target_triplet.nil? || drop_target_triplet?
+          opts << "-DVCPKG_TARGET_TRIPLET=#{target_triplet}"
+        end
+        opts << "-DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake"
       end
 
-      opts << "-DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake"
-
       opts
+    end
+
+    # Musl builds link against the distro's own -dev packages
+    # (freetype, fontconfig, libxml2, libpng) via pkg-config. This
+    # sidesteps vcpkg's lack of a public binary cache for musl
+    # triplets, which otherwise forces from-source compiles that
+    # exceed CI timeouts.
+    def use_system_libs?
+      target_platform.end_with?("-linux-musl")
     end
 
     def compile
